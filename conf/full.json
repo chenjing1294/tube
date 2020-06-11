@@ -1,0 +1,80 @@
+{
+  "inputs": [
+    {
+      "Stdin": {
+        "hostname": true,
+        "type": "Stdin",
+        "enableMeter": true,
+        "codec": "plain"
+      }
+    },
+    {
+      "Redis": {
+        "host": "localhost",
+        "port": 6379,
+        "channel": "hangout",
+        "type": "Redis",
+        "enableMeter": true,
+        "codec": "json"
+      }
+    },
+    {
+      "File": {
+        "codec": "plain",
+        "path": "D:\\temp\\test.log",
+        "encoding": "UTF8",
+        "startPosition": "beginning",
+        "enableMeter": true
+      }
+    }
+  ],
+  "filters": [
+    {
+      "Grok": {
+        "patternPaths": [
+          "/opt/hangout/grokpatternpaths"
+        ],
+        "matches": [
+          "%{IP:client} %{WORD:method} %{URIPATHPARAM:request} %{NUMBER:bytes} %{NUMBER:duration}"
+        ],
+        "src": "@message",
+        "enableMeter": true
+      },
+      "JavaScript": {
+        "customFunctionPath": "D:\\playground\\tube\\conf\\filter.js"
+      },
+      "Remove": {
+        "fields": [
+          "client",
+          "@message"
+        ]
+      }
+    }
+  ],
+  "outputs": [
+    {
+      "Elasticsearch": {
+        "hosts": [
+          "192.168.35.136:9200"
+        ],
+        "index": "tube-%{YYYY.MM.dd}",
+        "documentType": "${type}",
+        "enableMeter": true,
+        "bulkSize": 300
+      }
+    },
+    {
+      "Stdout": {
+        "enableMeter": true
+      }
+    },
+    {
+      "Redis": {
+        "host": "localhost",
+        "port": 6379,
+        "channel": "hangout",
+        "enableMeter": true
+      }
+    }
+  ]
+}
