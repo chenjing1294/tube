@@ -4,24 +4,10 @@
       "Redis": {
         "host": "localhost",
         "port": 6379,
-        "channel": "hangout-output-redis",
+        "channels": ["hangout", "tube"],
         "type": "Redis",
         "enableMeter": true,
-        "codec": "json"
-      }
-    },
-    {
-      "File": {
-        "codec": "plain",
-        "paths": [
-          "D:\\temp\\log\\access_20200610.log.gz",
-          "D:\\temp\\log\\access.log"
-        ],
-        "type": "Nginx",
-        "encoding": "UTF8",
-        "startPosition": "beginning",
-        "period": 3000,
-        "enableMeter": true
+        "codec": "plain"
       }
     }
   ],

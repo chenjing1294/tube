@@ -2,11 +2,13 @@ package com.serene.tube.input;
 
 import com.serene.tube.InputConfig;
 
+import java.util.List;
+
 public class RedisConfig extends InputConfig {
     private String host;
     private Integer port;
     private String password;
-    private String channel;
+    private List<String> channels;
 
     public String getHost() {
         return host;
@@ -32,11 +34,11 @@ public class RedisConfig extends InputConfig {
         this.password = password;
     }
 
-    public String getChannel() {
-        return channel;
+    public List<String> getChannels() {
+        return channels;
     }
 
-    public void setChannel(String channel) {
-        this.channel = channel;
+    public void setChannels(List<String> channels) {
+        this.channels = channels;
     }
 }

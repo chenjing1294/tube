@@ -26,8 +26,8 @@ public class Redis extends Input {
             System.exit(1);
         }
 
-        if (config.getChannel() == null) {
-            logger.error("please config [channel] for Redis input plugin!");
+        if (config.getChannels() == null) {
+            logger.error("please config [channels] for Redis input plugin!");
             System.exit(1);
         }
         this.jedisPool = new JedisPool(new GenericObjectPoolConfig(), config.getHost(), config.getPort(), Protocol.DEFAULT_TIMEOUT, config.getPassword());
@@ -43,7 +43,9 @@ public class Redis extends Input {
                     process(message);
                 }
             };
-            jedis.subscribe(jedisPubSub, ((RedisConfig) config).getChannel());
+            String[] channels = ((RedisConfig) config).getChannels().toArray(new String[0]);
+            jedis.subscribe(jedisPubSub, channels);
+
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
