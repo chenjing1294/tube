@@ -58,7 +58,7 @@
   ],
   "outputs": [
     {
-      "Elasticsearch": {
+      "ElasticSearch": {
         "hosts": [
           "192.168.35.136:9200"
         ],

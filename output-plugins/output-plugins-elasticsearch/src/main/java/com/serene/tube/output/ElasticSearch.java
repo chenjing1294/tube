@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -26,7 +27,7 @@ public class ElasticSearch extends Output {
     private Pattern datePattern;
     private Random random = new Random();
     private ObjectMapper objectMapper = new ObjectMapper();
-    private Map<String, List<Event>> eventsMap = new HashMap<>();
+    private Map<String, List<Event>> eventsMap = new ConcurrentHashMap<>();
     private boolean shutdown = false;
     private CloseableHttpClient httpclient = HttpClients.createDefault();
 
@@ -84,7 +85,7 @@ public class ElasticSearch extends Output {
         if (eventsMap.containsKey(iat)) {
             eventsMap.get(iat).add(event);
         } else {
-            ArrayList<Event> events = new ArrayList<>();
+            List<Event> events = Collections.synchronizedList(new ArrayList<>());
             events.add(event);
             eventsMap.put(iat, events);
         }
@@ -114,11 +115,14 @@ public class ElasticSearch extends Output {
             if (shutdown || events.size() >= ((ElasticSearchConfig) config).getBulkSize()) {
                 try {
                     StringBuilder builder = new StringBuilder();
-                    for (Event e : events) {
-                        builder.append("{\"index\":{}}").append("\n");
-                        builder.append(objectMapper.writeValueAsString(e)).append("\n");
-                    }
-
+                    events.forEach(event -> {
+                        try {
+                            String tmp = "{\"index\":{}}\n" + objectMapper.writeValueAsString(event) + "\n";
+                            builder.append(tmp);
+                        } catch (Exception e) {
+                            logger.warn("Encounter an event that cannot be resolved. {}", event);
+                        }
+                    });
                     HttpPost httpPost = new HttpPost(String.format("http://%s/%s/_bulk", hosts.get(random.nextInt(hosts.size())), k));
                     httpPost.setEntity(new ByteArrayEntity(builder.toString().getBytes(), ContentType.create("application/x-ndjson")));
                     CloseableHttpResponse response = httpclient.execute(httpPost);

@@ -150,6 +150,9 @@ public class File extends Input {
     @Override
     public void run() {
         Integer threadNum = ((FileConfig) config).getThreadNum();
+        if (threadNum > files.size()) {
+            threadNum = files.size();
+        }
         int step = files.size() / threadNum;
         for (int i = 0; i < threadNum; i++) {
             List<Path> fs = new ArrayList<>();

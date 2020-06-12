@@ -2,6 +2,7 @@ package com.serene.tube;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +64,11 @@ public abstract class Input extends Thread implements Metric {
         switch (config.getCodec()) {
             case "json":
                 try {
+                    message = message.replaceAll("\\\\", "\\\\\\\\");
                     event = objectMapper.readValue(message, Event.class);
+                } catch (JsonParseException e) {
+                    logger.error("it seems that underlying input contains invalid content.", e);
+                    return;
                 } catch (IOException e) {
                     logger.error(e.getMessage(), e);
                     return;
