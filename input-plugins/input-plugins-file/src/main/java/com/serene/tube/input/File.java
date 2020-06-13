@@ -63,7 +63,7 @@ public class File extends Input {
                 getAllFileInDir(tem, files);
             }
             if (inexistence.size() > 0) {
-                logger.error("指定的文件或目录不存在:\n{}", inexistence.toArray());
+                logger.error("The specified file or directory does not exist:\n{}", inexistence.toArray());
                 System.exit(1);
             }
         }
@@ -83,7 +83,7 @@ public class File extends Input {
                 }
             }
         } catch (IOException | ClassNotFoundException e) {
-            logger.warn("读取[File]内部数据结构时发生异常，请重新启动", e);
+            logger.warn("An exception occurred while reading [File] internal data structure, please restart", e);
             try {
                 Files.delete(path);
             } catch (IOException e1) {
@@ -142,9 +142,9 @@ public class File extends Input {
         }
         try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(file.toFile()))) {
             out.writeObject(readLengths);
-            logger.info("save tube-input-plugins-File.dat successfully");
+            logger.info("Save tube-input-plugins-File.dat successfully");
         } catch (IOException e) {
-            logger.error("保存内部数据时发生错误", e);
+            logger.error("An error occurred while saving internal data", e);
         }
     }
 
@@ -204,9 +204,6 @@ public class File extends Input {
             if (readLength == 0 && ((FileConfig) config).getStartPosition() == null) {
                 readLength = length;
                 readLengths.put(path.toAbsolutePath().toString(), length);
-            }
-            if (readLength > length) {
-                readLength = 0L;
             }
             if (readLength < length) {
                 file.seek(readLength);
@@ -270,19 +267,6 @@ public class File extends Input {
             readLengths.put(path.toAbsolutePath().toString(), 1L);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-        }
-    }
-
-
-    public static void main(String[] args) {
-        while (true) {
-            try (RandomAccessFile file = new RandomAccessFile("D:\\temp\\log\\access_2.log", "r")) {
-                long length = file.length();
-                System.out.println(length);
-                Thread.sleep(1000);
-            } catch (Exception e) {
-                logger.error(e.getMessage(), e);
-            }
         }
     }
 }

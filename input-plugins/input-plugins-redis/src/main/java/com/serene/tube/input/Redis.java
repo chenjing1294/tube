@@ -8,6 +8,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPubSub;
 import redis.clients.jedis.Protocol;
+import redis.clients.jedis.exceptions.JedisConnectionException;
 
 public class Redis extends Input {
     private final Logger logger = LoggerFactory.getLogger(Redis.class);
@@ -31,6 +32,14 @@ public class Redis extends Input {
             System.exit(1);
         }
         this.jedisPool = new JedisPool(new GenericObjectPoolConfig(), config.getHost(), config.getPort(), Protocol.DEFAULT_TIMEOUT, config.getPassword());
+        try {
+            logger.info("Start to detect whether the Redis connection...");
+            Jedis resource = jedisPool.getResource();
+            resource.close();
+        } catch (JedisConnectionException e) {
+            logger.error("Redis connection failed, start was cancelled...");
+            System.exit(1);
+        }
     }
 
     @Override

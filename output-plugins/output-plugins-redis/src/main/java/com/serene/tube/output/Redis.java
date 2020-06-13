@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Protocol;
+import redis.clients.jedis.exceptions.JedisConnectionException;
 
 public class Redis extends Output {
     private final static Logger logger = LoggerFactory.getLogger(Redis.class);
@@ -33,6 +34,13 @@ public class Redis extends Output {
             System.exit(1);
         }
         this.jedisPool = new JedisPool(new GenericObjectPoolConfig(), config.getHost(), config.getPort(), Protocol.DEFAULT_TIMEOUT, config.getPassword());
+        try {
+            logger.info("Start to detect whether the Redis connection...");
+            Jedis jedis = jedisPool.getResource();
+            jedis.close();
+        } catch (JedisConnectionException e) {
+            logger.error("Redis connection failed, start was cancelled...");
+        }
     }
 
     @Override

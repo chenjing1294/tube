@@ -5,6 +5,7 @@ import com.serene.tube.Event;
 import com.serene.tube.Output;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.ContentType;
@@ -25,14 +26,18 @@ public class ElasticSearch extends Output {
     private static Logger logger = LoggerFactory.getLogger(ElasticSearch.class);
     private Pattern fieldPattern;
     private Pattern datePattern;
-    private Random random = new Random();
-    private ObjectMapper objectMapper = new ObjectMapper();
-    private Map<String, List<Event>> eventsMap = new ConcurrentHashMap<>();
+    private Random random;
+    private ObjectMapper objectMapper;
+    private Map<String, List<Event>> eventsMap;
     private boolean shutdown = false;
-    private CloseableHttpClient httpclient = HttpClients.createDefault();
+    private CloseableHttpClient httpclient;
 
     public ElasticSearch(ElasticSearchConfig config) {
         super(config);
+        objectMapper = new ObjectMapper();
+        eventsMap = new ConcurrentHashMap<>();
+        random = new Random();
+        httpclient = HttpClients.createDefault();
         if (config.getBulkSize() == null) {
             config.setBulkSize(100);
         }
@@ -40,6 +45,30 @@ public class ElasticSearch extends Output {
         String datePattern = "\\%\\{[_0-9a-zA-Z\\.]+\\}";
         this.fieldPattern = Pattern.compile(fieldPattern);
         this.datePattern = Pattern.compile(datePattern);
+
+        List<String> hosts = ((ElasticSearchConfig) this.config).getHosts();
+        logger.info("Start to detect ElasticSearch cluster...");
+        List<String> dead = new ArrayList<>();
+        for (String host : hosts) {
+            HttpGet get = new HttpGet(String.format("http://%s", host));
+            try {
+                CloseableHttpResponse response = httpclient.execute(get);
+                logger.info("{} : {}", host, response.getStatusLine());
+            } catch (IOException e) {
+                dead.add(host);
+                logger.error("{} Connection failed", host);
+            }
+        }
+        if (dead.size() == hosts.size()) {
+            logger.error("Unable to connect to any ElasticSearch node, start was cancelled...");
+            System.exit(1);
+        } else {
+            logger.info("The following nodes cannot be connected:");
+            for (String d : dead) {
+                logger.info("{}", d);
+            }
+            hosts.removeAll(dead);
+        }
     }
 
     @Override
@@ -94,19 +123,21 @@ public class ElasticSearch extends Output {
 
     @Override
     public void shutdown() {
-        logger.info("Send the remaining events to ElasticSearch...");
-        eventsMap.forEach((k, v) -> {
-            if (v.size() > 0) {
-                shutdown = true;
-            }
-        });
-        sendEventToES();
+        if (!eventsMap.isEmpty()) {
+            logger.info("Send the remaining events to ElasticSearch...");
+            eventsMap.forEach((k, v) -> {
+                if (v.size() > 0) {
+                    shutdown = true;
+                }
+            });
+            sendEventToES();
+            logger.info("All events have been sent.(have a good day ^_^)");
+        }
         try {
             httpclient.close();
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
         }
-        logger.info("All events have been sent.(have a good day ^_^)");
     }
 
     private void sendEventToES() {
