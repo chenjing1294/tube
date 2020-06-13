@@ -13,11 +13,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.stream.Stream;
 
 /**
@@ -28,12 +26,18 @@ import java.util.stream.Stream;
  */
 public class File extends Input {
     private final static Logger logger = LoggerFactory.getLogger(File.class);
-    private Map<String, Long> readLengths = new ConcurrentHashMap<>();
-    private List<Path> files = new ArrayList<>();
-    private String fileName = "tube-input-plugins-File.dat";
+    private Map<String, Long> readLengths;
+    private Set<Path> files;
+    private String fileName;
+    private Random random;
 
     public File(FileConfig config, String threadName) {
         super(config, threadName);
+        random = new Random();
+        readLengths = new ConcurrentHashMap<>();
+        files = new ConcurrentSkipListSet<>();
+        fileName = "tube-input-plugins-File.dat";
+
         if (config.getEncoding() == null) {
             config.setEncoding("UTF8");
         }
@@ -46,8 +50,12 @@ public class File extends Input {
             System.exit(1);
         }
 
-        if (config.getPeriod() == null || config.getPeriod() < 100) {
-            config.setPeriod(5000);
+        if (config.getReadPeriod() == null || config.getReadPeriod() < 1000) {
+            config.setReadPeriod(5000);
+        }
+
+        if (config.getScanPeriod() == null || config.getScanPeriod() < 1000) {
+            config.setScanPeriod(1000 * 30);
         }
 
         if (config.getThreadNum() == null || config.getThreadNum() < 1) {
@@ -76,8 +84,8 @@ public class File extends Input {
             } else {
                 readLengths = new HashMap<>();
             }
-            for (int i = 0; i < files.size(); i++) {
-                String absPath = files.get(i).toAbsolutePath().toString();
+            for (Path p : files) {
+                String absPath = p.toAbsolutePath().toString();
                 if (!readLengths.containsKey(absPath)) {
                     readLengths.put(absPath, 0L);
                 }
@@ -100,22 +108,23 @@ public class File extends Input {
      * @param path  目录
      * @param files 文件存放位置
      */
-    private static void getAllFileInDir(Path path, List<Path> files) {
+    private static void getAllFileInDir(Path path, Set<Path> files) {
         if (Files.exists(path)) {
             if (Files.isDirectory(path)) {
                 try {
                     Stream<Path> list = Files.list(path);
                     list.forEach(p -> {
-                        if (!Files.isDirectory(p)) {
-                            files.add(p);
-                        } else {
-                            getAllFileInDir(p, files);
-                        }
+                        getAllFileInDir(p, files);
                     });
                 } catch (IOException e) {
                     logger.error(e.getMessage(), e);
                 }
             } else {
+                for (Path p : files) {
+                    if (p.toAbsolutePath().toString().equals(path.toAbsolutePath().toString())) {
+                        return;
+                    }
+                }
                 files.add(path);
             }
         }
@@ -155,13 +164,52 @@ public class File extends Input {
             threadNum = files.size();
         }
         int step = files.size() / threadNum;
+        List<Set<Path>> conveyor = new ArrayList<>();
+        Iterator<Path> iterator = files.iterator();
         for (int i = 0; i < threadNum; i++) {
-            List<Path> fs = new ArrayList<>();
-            for (int j = i * step; j < (i + 1) * step && j < files.size(); j++) {
-                fs.add(files.get(j));
+            Set<Path> fs = new ConcurrentSkipListSet<>();
+            for (int j = i * step; j < (i + 1) * step; j++) {
+                fs.add(iterator.next());
             }
+            if (i + 1 == threadNum) {
+                while (iterator.hasNext()) {
+                    fs.add(iterator.next());
+                }
+            }
+            conveyor.add(fs);
             monitoringFile(fs);
         }
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    while (true) {
+                        Thread.sleep(((FileConfig) config).getScanPeriod());
+                        for (String path : ((FileConfig) config).getPaths()) {
+                            Path tem = Paths.get(path);
+                            getAllFileInDir(tem, files);
+                        }
+                        for (Path p : files) {
+                            boolean exist = false;
+                            for (Set<Path> s : conveyor) {
+                                if (s.contains(p)) {
+                                    exist = true;
+                                    break;
+                                }
+                            }
+                            if (!exist) {
+                                logger.trace("find new file {}", p.toAbsolutePath().toString());
+                                readLengths.put(p.toAbsolutePath().toString(), 0L);
+                                conveyor.get(random.nextInt(conveyor.size())).add(p);
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.error(e.getMessage(), e);
+                }
+            }
+        }, "input-File-conveyor").start();
     }
 
     /**
@@ -169,7 +217,7 @@ public class File extends Input {
      *
      * @param paths 要监控的文件
      */
-    private void monitoringFile(List<Path> paths) {
+    private void monitoringFile(Set<Path> paths) {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -184,7 +232,7 @@ public class File extends Input {
                         }
                     }
                     try {
-                        Thread.sleep(((FileConfig) config).getPeriod());
+                        Thread.sleep(((FileConfig) config).getReadPeriod());
                     } catch (Exception e) {
                         logger.error(e.getMessage(), e);
                     }
@@ -204,6 +252,9 @@ public class File extends Input {
             if (readLength == 0 && ((FileConfig) config).getStartPosition() == null) {
                 readLength = length;
                 readLengths.put(path.toAbsolutePath().toString(), length);
+            }
+            if (readLength > length) {//重命名并压缩access.log，然后新建access.log继续记录日志
+                readLength = 0L;
             }
             if (readLength < length) {
                 file.seek(readLength);

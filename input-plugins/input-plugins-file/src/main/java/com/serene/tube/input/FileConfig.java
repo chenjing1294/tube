@@ -8,15 +8,24 @@ public class FileConfig extends InputConfig {
     private List<String> paths;     //目录或文件路径
     private String encoding;        //文件的编码格式
     private String startPosition;   //从头开始读取还是从文件末尾开始
-    private Integer period;         //线程扫描周期
+    private Integer readPeriod;     //每个多长时间读取一次文件内容，ms
+    private Integer scanPeriod;     //多久扫描一次文件夹是否有新的文件产生，ms
     private Integer threadNum;      //用于扫描读取文件的线程数
 
-    public Integer getPeriod() {
-        return period;
+    public Integer getReadPeriod() {
+        return readPeriod;
     }
 
-    public void setPeriod(Integer period) {
-        this.period = period;
+    public void setReadPeriod(Integer readPeriod) {
+        this.readPeriod = readPeriod;
+    }
+
+    public Integer getScanPeriod() {
+        return scanPeriod;
+    }
+
+    public void setScanPeriod(Integer scanPeriod) {
+        this.scanPeriod = scanPeriod;
     }
 
     public Integer getThreadNum() {

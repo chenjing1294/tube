@@ -29,7 +29,7 @@
         "type": "Nginx",
         "encoding": "UTF8",
         "startPosition": "beginning",
-        "period": 3000,
+        "readPeriod": 3000,
         "enableMeter": true
       }
     }

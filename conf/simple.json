@@ -21,7 +21,7 @@
         ],
         "type": "Nginx",
         "encoding": "UTF8",
-        "period": 5000,
+        "readPeriod": 5000,
         "threadNum": 3,
         "enableMeter": true
       }
@@ -41,17 +41,6 @@
     }
   ],
   "outputs": [
-    {
-      "ElasticSearch": {
-        "hosts": [
-          "192.168.35.136:9200"
-        ],
-        "index": "tube-%{YYYY.MM.dd}",
-        "documentType": "${type}",
-        "enableMeter": true,
-        "bulkSize": 300
-      }
-    },
     {
       "Stdout": {
         "enableMeter": true

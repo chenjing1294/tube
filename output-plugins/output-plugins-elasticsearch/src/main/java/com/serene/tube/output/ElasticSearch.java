@@ -144,6 +144,7 @@ public class ElasticSearch extends Output {
         List<String> hosts = ((ElasticSearchConfig) this.config).getHosts();
         eventsMap.forEach((k, events) -> {
             if (shutdown || events.size() >= ((ElasticSearchConfig) config).getBulkSize()) {
+                CloseableHttpResponse response = null;
                 try {
                     StringBuilder builder = new StringBuilder();
                     events.forEach(event -> {
@@ -156,7 +157,7 @@ public class ElasticSearch extends Output {
                     });
                     HttpPost httpPost = new HttpPost(String.format("http://%s/%s/_bulk", hosts.get(random.nextInt(hosts.size())), k));
                     httpPost.setEntity(new ByteArrayEntity(builder.toString().getBytes(), ContentType.create("application/x-ndjson")));
-                    CloseableHttpResponse response = httpclient.execute(httpPost);
+                    response = httpclient.execute(httpPost);
                     logger.info(response.getStatusLine().toString());
                     HttpEntity entity = response.getEntity();
                     /*InputStream content = entity.getContent();
@@ -171,6 +172,13 @@ public class ElasticSearch extends Output {
                 } catch (Exception e) {
                     logger.error(e.getMessage(), e);
                 } finally {
+                    if (response != null) {
+                        try {
+                            response.close();
+                        } catch (IOException e) {
+                            logger.error(e.getMessage(), e);
+                        }
+                    }
                     events.clear();
                 }
             }
