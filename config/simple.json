@@ -1,6 +1,14 @@
 {
   "inputs": [
     {
+      "Stdin": {
+        "hostname": true,
+        "type": "Stdin",
+        "enableMeter": true,
+        "codec": "plain"
+      }
+    },
+    {
       "Redis": {
         "host": "localhost",
         "port": 6379,
@@ -17,20 +25,21 @@
       "File": {
         "codec": "json",
         "paths": [
-          "D:\\temp\\log"
+          "D:\\temp\\log3"
         ],
         "type": "Nginx",
         "encoding": "UTF8",
         "readPeriod": 5000,
         "threadNum": 3,
-        "enableMeter": true
+        "enableMeter": true,
+        "startPosition": "beginning"
       }
     }
   ],
   "filters": [
     {
       "JavaScript": {
-        "customFunctionPath": "D:\\playground\\tube\\conf\\filter.js"
+        "customFunctionPath": "D:\\tube\\config\\filter.js"
       },
       "Remove": {
         "fields": [
@@ -41,6 +50,17 @@
     }
   ],
   "outputs": [
+    {
+      "ElasticSearch": {
+        "hosts": [
+          "192.168.35.136:9200"
+        ],
+        "index": "tube-%{YYYY.MM.dd}",
+        "documentType": "${type}",
+        "enableMeter": true,
+        "bulkSize": 300
+      }
+    },
     {
       "Stdout": {
         "enableMeter": true

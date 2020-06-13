@@ -160,7 +160,7 @@ public class File extends Input {
     @Override
     public void run() {
         Integer threadNum = ((FileConfig) config).getThreadNum();
-        if (threadNum > files.size()) {
+        if (threadNum > files.size() && files.size() > 0) {
             threadNum = files.size();
         }
         int step = files.size() / threadNum;

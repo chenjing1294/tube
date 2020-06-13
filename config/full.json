@@ -47,7 +47,7 @@
         "enableMeter": true
       },
       "JavaScript": {
-        "customFunctionPath": "D:\\playground\\tube\\conf\\filter.js"
+        "customFunctionPath": "D:\\tube\\config\\filter.js"
       },
       "Remove": {
         "fields": [

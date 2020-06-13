@@ -1,6 +1,6 @@
 package com.serene.tube;
 
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
-public class Event extends HashMap<String, Object> {
+public class Event extends ConcurrentHashMap<String, Object> {
 }

@@ -26,8 +26,12 @@ public class JavaScript extends Filter {
             if (engine instanceof Compilable) {
                 this.script = ((Compilable) engine).compile(fileReader);
             }
-        } catch (FileNotFoundException | ScriptException e) {
-            logger.error(e.getMessage(), e);
+        } catch (FileNotFoundException e) {
+            logger.error("The specified script file {} was not found.", config.getCustomFunctionPath());
+            System.exit(1);
+        } catch (ScriptException e) {
+            logger.error("Error compiling script file {}.", config.getCustomFunctionPath());
+            System.exit(1);
         }
     }
 
