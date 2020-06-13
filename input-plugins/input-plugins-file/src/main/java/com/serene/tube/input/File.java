@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 /**
@@ -27,7 +28,7 @@ import java.util.stream.Stream;
  */
 public class File extends Input {
     private final static Logger logger = LoggerFactory.getLogger(File.class);
-    private Map<String, Long> readLengths = new HashMap<>();
+    private Map<String, Long> readLengths = new ConcurrentHashMap<>();
     private List<Path> files = new ArrayList<>();
     private String fileName = "tube-input-plugins-File.dat";
 
@@ -200,6 +201,10 @@ public class File extends Input {
         try (RandomAccessFile file = new RandomAccessFile(path.toFile(), "r")) {
             Long readLength = readLengths.get(path.toAbsolutePath().toString());
             long length = file.length();
+            if (readLength == 0 && ((FileConfig) config).getStartPosition() == null) {
+                readLength = length;
+                readLengths.put(path.toAbsolutePath().toString(), length);
+            }
             if (readLength > length) {
                 readLength = 0L;
             }
@@ -223,7 +228,8 @@ public class File extends Input {
      */
     private void readGzipFile(Path path) {
         Long readLength = readLengths.get(path.toAbsolutePath().toString());
-        if (readLength > 0)
+        //不跟踪压缩或打包文件
+        if (readLength > 0 || ((FileConfig) config).getStartPosition() == null)
             return;
         Charset charset = Charset.forName(((FileConfig) config).getEncoding());
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new GzipCompressorInputStream(new FileInputStream(path.toFile()), true), charset));) {
@@ -244,7 +250,7 @@ public class File extends Input {
      */
     private void readTarGzipFile(Path path) {
         Long readLength = readLengths.get(path.toAbsolutePath().toString());
-        if (readLength > 0)
+        if (readLength > 0 || ((FileConfig) config).getStartPosition() == null)
             return;
         Charset charset = Charset.forName(((FileConfig) config).getEncoding());
         try (TarArchiveInputStream tar = new TarArchiveInputStream(new GzipCompressorInputStream(new FileInputStream(path.toFile()), true));) {
@@ -264,6 +270,19 @@ public class File extends Input {
             readLengths.put(path.toAbsolutePath().toString(), 1L);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
+        }
+    }
+
+
+    public static void main(String[] args) {
+        while (true) {
+            try (RandomAccessFile file = new RandomAccessFile("D:\\temp\\log\\access_2.log", "r")) {
+                long length = file.length();
+                System.out.println(length);
+                Thread.sleep(1000);
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+            }
         }
     }
 }

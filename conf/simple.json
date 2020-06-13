@@ -21,7 +21,6 @@
         ],
         "type": "Nginx",
         "encoding": "UTF8",
-        "startPosition": "beginning",
         "period": 1000,
         "threadNum": 3,
         "enableMeter": true
@@ -42,6 +41,11 @@
     }
   ],
   "outputs": [
+    {
+      "Stdout": {
+        "enableMeter": true
+      }
+    },
     {
       "ElasticSearch": {
         "hosts": [
