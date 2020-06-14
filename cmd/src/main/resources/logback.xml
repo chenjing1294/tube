@@ -1,18 +1,18 @@
 <configuration>
-    <property name="LOG_HOME" value="d:\\temp"/>
+    <property name="LOG_HOME" value="./log"/>
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>
-                %d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
+                %d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{10} - %msg%n
             </pattern>
         </encoder>
     </appender>
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_HOME}\\tube.log</file>
+        <file>${LOG_HOME}/tube-metric.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- daily rollover -->
-            <fileNamePattern>${LOG_HOME}\\tube.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>${LOG_HOME}\\tube-metric.%d{yyyy-MM-dd}.log</fileNamePattern>
             <!-- keep 30 days' worth of history capped at 3GB total size -->
             <maxHistory>30</maxHistory>
             <totalSizeCap>3GB</totalSizeCap>

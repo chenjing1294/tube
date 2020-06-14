@@ -115,8 +115,8 @@ public class TopologyBuilder {
     }
 
     public void buildTopology() {
-        InputQueue inputQueue = new InputQueue();
-        OutputQueue outputQueue = new OutputQueue();
+        InputQueue inputQueue = new InputQueue(10000);
+        OutputQueue outputQueue = new OutputQueue(10000);
         List<Input> inputs = this.buildInputs();
         List<Filter> filters = this.buildFilters();
         List<Output> outputs = this.buildOutputs();
@@ -141,6 +141,6 @@ public class TopologyBuilder {
         OutputDispatcher outputDispatcher = new OutputDispatcher(outputs);
         outputDispatcher.setOutputQueue(outputQueue);
         outputDispatcher.start();
-        logger.info("tube starting success!");
+        logger.info("tube starting success! ({})", "1.0-SNAPSHOT");
     }
 }

@@ -151,7 +151,7 @@ public class File extends Input {
         }
         try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(file.toFile()))) {
             out.writeObject(readLengths);
-            logger.info("Save tube-input-plugins-File.dat successfully");
+            logger.info("[{}] input plugin shutdown success", this.getClass().getSimpleName());
         } catch (IOException e) {
             logger.error("An error occurred while saving internal data", e);
         }

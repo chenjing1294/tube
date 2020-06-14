@@ -135,6 +135,7 @@ public class ElasticSearch extends Output {
         }
         try {
             httpclient.close();
+            logger.info("[{}] output plugin shutdown success", this.getClass().getSimpleName());
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
         }

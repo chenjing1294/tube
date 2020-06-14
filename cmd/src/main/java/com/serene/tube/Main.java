@@ -37,6 +37,6 @@ public class Main {
                 .convertRatesTo(TimeUnit.SECONDS)
                 .convertDurationsTo(TimeUnit.MILLISECONDS)
                 .build();
-        slf4jReporter.start(5, TimeUnit.MINUTES);
+        slf4jReporter.start(100, TimeUnit.SECONDS);
     }
 }

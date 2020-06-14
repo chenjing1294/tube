@@ -81,6 +81,11 @@
         "channel": "hangout",
         "enableMeter": true
       }
+    },
+    {
+      "Blackhole": {
+        "enableMeter": true
+      }
     }
   ]
 }

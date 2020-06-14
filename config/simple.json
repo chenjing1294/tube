@@ -25,12 +25,12 @@
       "File": {
         "codec": "json",
         "paths": [
-          "D:\\temp\\log3"
+          "D:\\temp\\log"
         ],
         "type": "Nginx",
         "encoding": "UTF8",
         "readPeriod": 5000,
-        "threadNum": 3,
+        "threadNum": 14,
         "enableMeter": true,
         "startPosition": "beginning"
       }
@@ -59,11 +59,6 @@
         "documentType": "${type}",
         "enableMeter": true,
         "bulkSize": 300
-      }
-    },
-    {
-      "Stdout": {
-        "enableMeter": true
       }
     }
   ]

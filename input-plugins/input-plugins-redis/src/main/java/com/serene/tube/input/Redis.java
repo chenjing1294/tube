@@ -63,6 +63,6 @@ public class Redis extends Input {
     @Override
     public void shutdown() {
         jedisPool.close();
-        logger.info("[{}] input plugin shutdown success", this.getClass().getName());
+        logger.info("[{}] input plugin shutdown success", this.getClass().getSimpleName());
     }
 }

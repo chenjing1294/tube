@@ -15,6 +15,7 @@
         <module>output-plugins-stdout</module>
         <module>output-plugins-elasticsearch</module>
         <module>output-plugins-redis</module>
+        <module>output-plugins-blackhole</module>
     </modules>
 
     <dependencies>
