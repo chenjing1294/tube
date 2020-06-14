@@ -5,6 +5,7 @@ import com.codahale.metrics.MetricRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.script.*;
 import java.util.concurrent.BlockingQueue;
 
 public abstract class Filter extends Thread implements Metric {
@@ -14,12 +15,29 @@ public abstract class Filter extends Thread implements Metric {
     private BlockingQueue<Event> postQueue;
     private Meter meter;
 
+    private ScriptEngineManager engineManager;
+    private ScriptEngine engine;
+    private CompiledScript script;
+
     public Filter(FilterConfig config, String threadName) {
         super(threadName);
         registerShutdownHook();
         this.config = config;
         if (config.getEnableMeter() != null && config.getEnableMeter()) {
             this.meter = metricRegistry.meter(MetricRegistry.name(this.getClass()));
+        }
+
+        engineManager = new ScriptEngineManager();
+        engine = engineManager.getEngineByName("JavaScript");
+        if (config.getCondition() != null) {
+            try {
+                if (engine instanceof Compilable) {
+                    this.script = ((Compilable) engine).compile(config.getCondition());
+                }
+            } catch (ScriptException e) {
+                logger.error("Error compiling script {}.", config.getCondition());
+                System.exit(1);
+            }
         }
     }
 
@@ -49,10 +67,20 @@ public abstract class Filter extends Thread implements Metric {
 
     public abstract Event filter(Event event);
 
-    private Event process(Event event) {
-        event = preProcess(event);
-        event = filter(event);
-        event = postProcess(event);
+    private Event process(Event event) throws Exception {
+        Bindings bindings = engine.createBindings();
+        bindings.put("event", event);
+        boolean result = true;
+        if (script != null) {
+            result = (boolean) script.eval(bindings);
+        } else if (config.getCondition() != null) {
+            result = (boolean) engine.eval(config.getCondition(), bindings);
+        }
+        if (result) {
+            event = preProcess(event);
+            event = filter(event);
+            event = postProcess(event);
+        }
         if (config.getEnableMeter() != null && config.getEnableMeter()) {
             meter.mark();
         }

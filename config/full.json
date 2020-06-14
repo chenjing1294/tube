@@ -47,7 +47,12 @@
         "enableMeter": true
       },
       "JavaScript": {
+        "condition": "event['@fields'] ? true : false",
         "customFunctionPath": "D:\\tube\\config\\filter.js"
+      },
+      "Geoip2": {
+        "condition": "event['remote_addr'] ? true : false",
+        "ip": "remote_addr"
       },
       "Remove": {
         "fields": [

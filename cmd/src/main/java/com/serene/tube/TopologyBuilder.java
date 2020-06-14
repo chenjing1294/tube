@@ -141,6 +141,6 @@ public class TopologyBuilder {
         OutputDispatcher outputDispatcher = new OutputDispatcher(outputs);
         outputDispatcher.setOutputQueue(outputQueue);
         outputDispatcher.start();
-        logger.info("tube starting success! ({})", "1.0");
+        logger.info("tube starting success! ({})", "1.1");
     }
 }
