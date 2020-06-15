@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import javax.script.*;
 import java.util.concurrent.BlockingQueue;
 
-public abstract class Filter extends Thread implements Metric {
+public abstract class Filter extends Thread implements Plugin {
     private static final Logger logger = LoggerFactory.getLogger(Filter.class);
     protected final FilterConfig config;
     private BlockingQueue<Event> preQueue;

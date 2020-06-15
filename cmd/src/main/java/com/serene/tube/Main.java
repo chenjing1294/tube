@@ -32,7 +32,7 @@ public class Main {
     private static void initMetrics() {
         String loggerName = "com.serene.tube.metricLogger";
         final Slf4jReporter slf4jReporter = Slf4jReporter
-                .forRegistry(Metric.metricRegistry)
+                .forRegistry(Plugin.metricRegistry)
                 .outputTo(LoggerFactory.getLogger(loggerName))
                 .convertRatesTo(TimeUnit.SECONDS)
                 .convertDurationsTo(TimeUnit.MILLISECONDS)

@@ -161,14 +161,6 @@ public class ElasticSearch extends Output {
                     response = httpclient.execute(httpPost);
                     logger.info(response.getStatusLine().toString());
                     HttpEntity entity = response.getEntity();
-                    /*InputStream content = entity.getContent();
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(content, StandardCharsets.UTF_8));
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        System.out.println(line);
-                    }*/
-                    // do something useful with the response body
-                    // and ensure it is fully consumed
                     EntityUtils.consume(entity);
                 } catch (Exception e) {
                     logger.error(e.getMessage(), e);

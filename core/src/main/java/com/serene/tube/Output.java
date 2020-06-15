@@ -3,7 +3,7 @@ package com.serene.tube;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 
-public abstract class Output implements Metric {
+public abstract class Output implements Plugin {
     protected OutputConfig config;
     private Meter meter;
 

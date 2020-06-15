@@ -14,7 +14,7 @@
         "port": 6379,
         "password": "1234",
         "channels": ["hangout", "tube"],
-        "type": "Redis",
+        "type": "Microservices",
         "enableMeter": true,
         "codec": "json"
       }

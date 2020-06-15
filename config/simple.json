@@ -1,24 +1,15 @@
 {
   "inputs": [
     {
-      "Stdin": {
-        "hostname": true,
-        "type": "Stdin",
-        "enableMeter": true,
-        "codec": "plain"
-      }
-    },
-    {
       "Redis": {
         "host": "localhost",
         "port": 6379,
         "channels": [
-          "hangout",
-          "tube"
+          "Microservices"
         ],
-        "type": "Redis",
+        "type": "Microservices",
         "enableMeter": true,
-        "codec": "plain"
+        "codec": "json"
       }
     },
     {

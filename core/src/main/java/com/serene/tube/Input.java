@@ -19,7 +19,7 @@ import java.util.Date;
  * @author 陈敬
  * @since 2020年6月07日
  */
-public abstract class Input extends Thread implements Metric {
+public abstract class Input extends Thread implements Plugin {
     private final static Logger logger = LoggerFactory.getLogger(Input.class);
     protected final InputConfig config;
     private final DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
@@ -64,7 +64,7 @@ public abstract class Input extends Thread implements Metric {
         switch (config.getCodec()) {
             case "json":
                 try {
-                    message = message.replaceAll("\\\\", "\\\\\\\\");
+                    message = message.replaceAll("\\\\(?!\")", "\\\\\\\\");
                     event = objectMapper.readValue(message, Event.class);
                 } catch (JsonParseException e) {
                     logger.error("it seems that underlying input contains invalid content.", e);
