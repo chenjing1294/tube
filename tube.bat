@@ -18,4 +18,4 @@ set "JAVA_OPTS=%JAVA_OPTS% -server -Xms2g -Xmx2g -Xmn1g -XX:MetaspaceSize=128m -
 set "JAVA_OPTS=%JAVA_OPTS% -XX:-OmitStackTraceInFastThrow"
 set "JAVA_OPTS=%JAVA_OPTS% -XX:-UseLargePages"
 set "JAVA_OPTS=%JAVA_OPTS% -cp %CLASSPATH%"
-"%JAVA%" %JAVA_OPTS% com.serene.tube.Main -f %basedir%config\simple.json %*
+"%JAVA%" %JAVA_OPTS% com.serene.tube.Main -f %basedir%config\simple_windows.json %*

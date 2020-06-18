@@ -60,7 +60,7 @@ public class ElasticSearch extends Output {
             }
         }
         if (dead.size() == hosts.size()) {
-            logger.error("Unable to connect to any ElasticSearch node, start was cancelled...");
+            logger.error("Unable to connect to any ElasticSearch node");
             System.exit(1);
         } else if (dead.size() > 0) {
             logger.info("The following nodes cannot be connected:");

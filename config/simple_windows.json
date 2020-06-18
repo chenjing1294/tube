@@ -1,0 +1,61 @@
+{
+  "inputs": [
+    {
+      "Redis": {
+        "host": "localhost",
+        "port": 6379,
+        "channels": [
+          "Microservices"
+        ],
+        "type": "Microservices",
+        "enableMeter": true,
+        "codec": "json"
+      }
+    },
+    {
+      "File": {
+        "codec": "json",
+        "paths": [
+          "D:\\temp\\log2"
+        ],
+        "type": "Nginx",
+        "encoding": "UTF8",
+        "readPeriod": 5000,
+        "threadNum": 5,
+        "enableMeter": true,
+        "startPosition": "beginning"
+      }
+    }
+  ],
+  "filters": [
+    {
+      "JavaScript": {
+        "condition": "event['@fields'] ? true : false",
+        "customFunctionPath": "D:\\tube-jar\\config\\filter.js"
+      },
+      "Geoip2": {
+        "condition": "event['remote_addr'] ? true : false",
+        "ip": "remote_addr"
+      },
+      "Remove": {
+        "fields": [
+          "@fields",
+          "@message"
+        ]
+      }
+    }
+  ],
+  "outputs": [
+    {
+      "ElasticSearch": {
+        "hosts": [
+          "192.168.1.186:9200"
+        ],
+        "index": "tube-%{YYYY.MM.dd}",
+        "documentType": "${type}",
+        "enableMeter": true,
+        "bulkSize": 300
+      }
+    }
+  ]
+}

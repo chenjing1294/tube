@@ -16,7 +16,7 @@
       "File": {
         "codec": "json",
         "paths": [
-          "D:\\temp\\log"
+          "/mnt/d/temp/log"
         ],
         "type": "Nginx",
         "encoding": "UTF8",
@@ -31,7 +31,7 @@
     {
       "JavaScript": {
         "condition": "event['@fields'] ? true : false",
-        "customFunctionPath": "D:\\tube\\config\\filter.js"
+        "customFunctionPath": "/mnt/d/tube-jar/config/filter.js"
       },
       "Geoip2": {
         "condition": "event['remote_addr'] ? true : false",

@@ -13,7 +13,10 @@
         "host": "localhost",
         "port": 6379,
         "password": "1234",
-        "channels": ["hangout", "tube"],
+        "channels": [
+          "hangout",
+          "tube"
+        ],
         "type": "Microservices",
         "enableMeter": true,
         "codec": "json"
