@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-public class OutputDispatcher extends Thread {
+public class OutputDispatcher extends Thread implements Plugin {
     private static final Logger logger = LoggerFactory.getLogger(OutputDispatcher.class);
     private List<Output> outputs;
     private OutputQueue outputQueue;
@@ -29,6 +29,18 @@ public class OutputDispatcher extends Thread {
                     output.process(event);
                 }
             } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+            }
+        }
+    }
+
+    @Override
+    public void shutdown() {
+        while (outputQueue.size() > 0) {
+            try {
+                logger.debug("Processing the remaining events in the tube, please wait a moment...");
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
                 logger.error(e.getMessage(), e);
             }
         }

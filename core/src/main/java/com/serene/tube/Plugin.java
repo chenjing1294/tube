@@ -7,8 +7,4 @@ public interface Plugin {
 
     default void shutdown() {
     }
-
-    default void registerShutdownHook() {
-        Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
-    }
 }

@@ -8,7 +8,6 @@ public abstract class Output implements Plugin {
     private Meter meter;
 
     public Output(OutputConfig config) {
-        registerShutdownHook();
         this.config = config;
         if (config.getEnableMeter() != null && config.getEnableMeter()) {
             this.meter = metricRegistry.meter(MetricRegistry.name(this.getClass()));

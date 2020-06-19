@@ -30,9 +30,12 @@ public class File extends Input {
     private Set<Path> files;
     private String fileName;
     private Random random;
+    private boolean shutdown = false;
+    private Map<String, Boolean> temp;
 
     public File(FileConfig config, String threadName) {
         super(config, threadName);
+        temp = new ConcurrentHashMap<>();
         random = new Random();
         readLengths = new ConcurrentHashMap<>();
         files = new ConcurrentSkipListSet<>();
@@ -51,11 +54,11 @@ public class File extends Input {
         }
 
         if (config.getReadPeriod() == null || config.getReadPeriod() < 1000) {
-            config.setReadPeriod(5000);
+            config.setReadPeriod(3000);
         }
 
         if (config.getScanPeriod() == null || config.getScanPeriod() < 1000) {
-            config.setScanPeriod(1000 * 30);
+            config.setScanPeriod(3000);
         }
 
         if (config.getThreadNum() == null || config.getThreadNum() < 1) {
@@ -132,6 +135,14 @@ public class File extends Input {
 
     @Override
     public void shutdown() {
+        shutdown = true;
+        while (temp.size() > 0) {
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                logger.error(e.getMessage(), e);
+            }
+        }
         //记录文件读取位置
         Path file = Paths.get(System.getProperty("user.home"), ".tube", fileName);
         if (!Files.exists(file)) {
@@ -180,11 +191,12 @@ public class File extends Input {
             monitoringFile(fs);
         }
 
+        String tname = UUID.randomUUID().toString();
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    while (true) {
+                    while (!shutdown) {
                         Thread.sleep(((FileConfig) config).getScanPeriod());
                         for (String path : ((FileConfig) config).getPaths()) {
                             Path tem = Paths.get(path);
@@ -205,11 +217,13 @@ public class File extends Input {
                             }
                         }
                     }
+                    temp.remove(tname);
                 } catch (Exception e) {
                     logger.error(e.getMessage(), e);
                 }
             }
-        }, "input-File-conveyor").start();
+        }, tname).start();
+        temp.put(tname, false);
     }
 
     /**
@@ -218,10 +232,11 @@ public class File extends Input {
      * @param paths 要监控的文件
      */
     private void monitoringFile(Set<Path> paths) {
+        String tname = UUID.randomUUID().toString();
         new Thread(new Runnable() {
             @Override
             public void run() {
-                while (true) {
+                while (!shutdown) {
                     for (Path path : paths) {
                         if (path.toAbsolutePath().toString().endsWith(".tar.gz")) {
                             readTarGzipFile(path);
@@ -237,8 +252,10 @@ public class File extends Input {
                         logger.error(e.getMessage(), e);
                     }
                 }
+                temp.remove(tname);
             }
         }).start();
+        temp.put(tname, false);
     }
 
     /**
@@ -259,7 +276,7 @@ public class File extends Input {
             if (readLength < length) {
                 file.seek(readLength);
                 String line;
-                while ((line = file.readLine()) != null) {
+                while ((line = file.readLine()) != null && !shutdown) {
                     if (line.length() > 0) {
                         process(new String(line.getBytes(StandardCharsets.ISO_8859_1), charset));
                     }
@@ -282,7 +299,7 @@ public class File extends Input {
         Charset charset = Charset.forName(((FileConfig) config).getEncoding());
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new GzipCompressorInputStream(new FileInputStream(path.toFile()), true), charset));) {
             String line;
-            while ((line = reader.readLine()) != null) {
+            while ((line = reader.readLine()) != null && !shutdown) {
                 if (line.length() != 0) {
                     process(line);
                 }
@@ -303,7 +320,7 @@ public class File extends Input {
         Charset charset = Charset.forName(((FileConfig) config).getEncoding());
         try (TarArchiveInputStream tar = new TarArchiveInputStream(new GzipCompressorInputStream(new FileInputStream(path.toFile()), true));) {
             TarArchiveEntry entry;
-            while ((entry = tar.getNextTarEntry()) != null) {
+            while ((entry = tar.getNextTarEntry()) != null && !shutdown) {
                 if (entry.isDirectory()) {
                     continue;
                 }

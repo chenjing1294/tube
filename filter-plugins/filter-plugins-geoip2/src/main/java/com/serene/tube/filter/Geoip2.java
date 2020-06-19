@@ -70,8 +70,10 @@ public class Geoip2 extends Filter {
                 loc.put("lon", longitude);
                 geoip2.put("location", loc);
                 event.put("geoip2", geoip2);
-            } catch (GeoIp2Exception | IOException e) {
-                logger.warn("An exception occurred while parsing the IP address({})", ip);
+            } catch (GeoIp2Exception e) {
+                logger.debug("An exception occurred while parsing the IP address({})", ip);
+            } catch (IOException e) {
+                logger.error(e.getMessage(), e);
             }
         }
         return event;
@@ -80,6 +82,7 @@ public class Geoip2 extends Filter {
     @Override
     public void shutdown() {
         try {
+            super.shutdown();
             reader.close();
             logger.info("[{}] filter plugin shutdown success", this.getClass().getSimpleName());
         } catch (IOException e) {

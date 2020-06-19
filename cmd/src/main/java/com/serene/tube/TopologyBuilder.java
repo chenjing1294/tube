@@ -18,6 +18,10 @@ public class TopologyBuilder {
     private final List<HashMap<String, Map>> inputConfigs;
     private final List<HashMap<String, Map>> filterConfigs;
     private final List<HashMap<String, Map>> outputConfigs;
+    List<Input> inputs;
+    List<Filter> filters;
+    List<Output> outputs;
+    OutputDispatcher outputDispatcher;
 
     public TopologyBuilder(List<HashMap<String, Map>> inputConfigs,
                            List<HashMap<String, Map>> filterConfigs,
@@ -117,9 +121,9 @@ public class TopologyBuilder {
     public void buildTopology() {
         InputQueue inputQueue = new InputQueue(10000);
         OutputQueue outputQueue = new OutputQueue(10000);
-        List<Input> inputs = this.buildInputs();
-        List<Filter> filters = this.buildFilters();
-        List<Output> outputs = this.buildOutputs();
+        inputs = this.buildInputs();
+        filters = this.buildFilters();
+        outputs = this.buildOutputs();
         for (Input input : inputs) {
             input.setInputQueue(inputQueue);
             input.start();
@@ -138,9 +142,25 @@ public class TopologyBuilder {
         for (Filter filter : filters) {
             filter.start();
         }
-        OutputDispatcher outputDispatcher = new OutputDispatcher(outputs);
+        outputDispatcher = new OutputDispatcher(outputs);
         outputDispatcher.setOutputQueue(outputQueue);
         outputDispatcher.start();
-        logger.info("tube starting success! ({})", "1.1");
+
+        Runtime.getRuntime().addShutdownHook(new Thread(this::_shutdown, "tubeCleaner"));
+        logger.info("tube starting success! ({})", "1.2");
+    }
+
+    private void _shutdown() {
+        logger.info("Ending threads, please do not forcefully close the program!!");
+        for (Input input : inputs) {
+            input.shutdown();
+        }
+        for (Filter filter : filters) {
+            filter.shutdown();
+        }
+        outputDispatcher.shutdown();
+        for (Output output : outputs) {
+            output.shutdown();
+        }
     }
 }

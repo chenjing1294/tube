@@ -5,7 +5,7 @@
     <parent>
         <artifactId>tube</artifactId>
         <groupId>com.serene</groupId>
-        <version>1.1</version>
+        <version>1.2</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -15,7 +15,7 @@
         <dependency>
             <groupId>com.serene</groupId>
             <artifactId>core</artifactId>
-            <version>1.1</version>
+            <version>1.2</version>
         </dependency>
         <dependency>
             <groupId>args4j</groupId>
@@ -27,52 +27,52 @@
         <dependency>
             <groupId>com.serene</groupId>
             <artifactId>input-plugins-stdin</artifactId>
-            <version>1.1</version>
+            <version>1.2</version>
         </dependency>
         <dependency>
             <groupId>com.serene</groupId>
             <artifactId>output-plugins-stdout</artifactId>
-            <version>1.1</version>
+            <version>1.2</version>
         </dependency>
         <dependency>
             <groupId>com.serene</groupId>
             <artifactId>filter-plugins-grok</artifactId>
-            <version>1.1</version>
+            <version>1.2</version>
         </dependency>
         <dependency>
             <groupId>com.serene</groupId>
             <artifactId>input-plugins-redis</artifactId>
-            <version>1.1</version>
+            <version>1.2</version>
         </dependency>
         <dependency>
             <groupId>com.serene</groupId>
             <artifactId>filter-plugins-javascript</artifactId>
-            <version>1.1</version>
+            <version>1.2</version>
         </dependency>
         <dependency>
             <groupId>com.serene</groupId>
             <artifactId>filter-plugins-remove</artifactId>
-            <version>1.1</version>
+            <version>1.2</version>
         </dependency>
         <dependency>
             <groupId>com.serene</groupId>
             <artifactId>output-plugins-elasticsearch</artifactId>
-            <version>1.1</version>
+            <version>1.2</version>
         </dependency>
         <dependency>
             <groupId>com.serene</groupId>
             <artifactId>input-plugins-file</artifactId>
-            <version>1.1</version>
+            <version>1.2</version>
         </dependency>
         <dependency>
             <groupId>com.serene</groupId>
             <artifactId>output-plugins-redis</artifactId>
-            <version>1.1</version>
+            <version>1.2</version>
         </dependency>
         <dependency>
             <groupId>com.serene</groupId>
             <artifactId>filter-plugins-geoip2</artifactId>
-            <version>1.1</version>
+            <version>1.2</version>
         </dependency>
     </dependencies>
 

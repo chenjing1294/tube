@@ -14,6 +14,7 @@ public abstract class Filter extends Thread implements Plugin {
     private BlockingQueue<Event> preQueue;
     private BlockingQueue<Event> postQueue;
     private Meter meter;
+    private boolean processing;
 
     private ScriptEngineManager engineManager;
     private ScriptEngine engine;
@@ -21,7 +22,7 @@ public abstract class Filter extends Thread implements Plugin {
 
     public Filter(FilterConfig config, String threadName) {
         super(threadName);
-        registerShutdownHook();
+        processing = false;
         this.config = config;
         if (config.getEnableMeter() != null && config.getEnableMeter()) {
             this.meter = metricRegistry.meter(MetricRegistry.name(this.getClass()));
@@ -41,11 +42,11 @@ public abstract class Filter extends Thread implements Plugin {
         }
     }
 
-    BlockingQueue<Event> getPreQueue() {
+    protected BlockingQueue<Event> getPreQueue() {
         return preQueue;
     }
 
-    void setPreQueue(BlockingQueue<Event> preQueue) {
+    protected void setPreQueue(BlockingQueue<Event> preQueue) {
         this.preQueue = preQueue;
     }
 
@@ -92,9 +93,23 @@ public abstract class Filter extends Thread implements Plugin {
         while (true) {
             try {
                 Event event = preQueue.take();
+                processing = true;
                 event = process(event);
+                processing = false;
                 postQueue.put(event);
             } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+            }
+        }
+    }
+
+    @Override
+    public void shutdown() {
+        while (processing || preQueue.size() > 0) {
+            try {
+                logger.debug("Processing the remaining events in the tube, please wait a moment...");
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
                 logger.error(e.getMessage(), e);
             }
         }

@@ -29,7 +29,6 @@ public abstract class Input extends Thread implements Plugin {
 
     public Input(InputConfig config, String threadName) {
         super(threadName);
-        registerShutdownHook();
         this.config = config;
         if (config.getEnableMeter() != null && config.getEnableMeter()) {
             this.meter = metricRegistry.meter(MetricRegistry.name(this.getClass()));

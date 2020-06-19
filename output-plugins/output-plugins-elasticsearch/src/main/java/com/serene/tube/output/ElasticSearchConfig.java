@@ -7,8 +7,16 @@ import java.util.List;
 public class ElasticSearchConfig extends OutputConfig {
     private List<String> hosts;
     private String index;
-    private String documentType;
     private Integer bulkSize;
+    private String mapping;
+
+    public String getMapping() {
+        return mapping;
+    }
+
+    public void setMapping(String mapping) {
+        this.mapping = mapping;
+    }
 
     public Integer getBulkSize() {
         return bulkSize;
@@ -32,13 +40,5 @@ public class ElasticSearchConfig extends OutputConfig {
 
     public void setIndex(String index) {
         this.index = index;
-    }
-
-    public String getDocumentType() {
-        return documentType;
-    }
-
-    public void setDocumentType(String documentType) {
-        this.documentType = documentType;
     }
 }

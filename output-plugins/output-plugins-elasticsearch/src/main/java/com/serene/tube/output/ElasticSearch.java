@@ -4,9 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.serene.tube.Event;
 import com.serene.tube.Output;
 import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.methods.*;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -16,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,6 +40,10 @@ public class ElasticSearch extends Output {
         httpclient = HttpClients.createDefault();
         if (config.getBulkSize() == null) {
             config.setBulkSize(100);
+        }
+        if (config.getMapping() == null || config.getMapping().length() == 0) {
+            logger.warn("No mapping specified for index");
+            config.setMapping(null);
         }
         String fieldPattern = "\\$\\{[_0-9a-zA-Z]+\\}";
         String datePattern = "\\%\\{[_0-9a-zA-Z\\.]+\\}";
@@ -75,7 +79,6 @@ public class ElasticSearch extends Output {
     public void emit(Event event) {
         Date now = new Date();
         String index = ((ElasticSearchConfig) config).getIndex();
-        String documentType = ((ElasticSearchConfig) this.config).getDocumentType();
 
         Matcher fieldMatcher = fieldPattern.matcher(index);
         StringBuilder newIndex = new StringBuilder();
@@ -99,24 +102,13 @@ public class ElasticSearch extends Output {
         }
         nnewIndex.append(newIndex.substring(end));
 
-        end = 0;
-        fieldMatcher = fieldPattern.matcher(documentType);
-        StringBuilder newDocumentType = new StringBuilder();
-        while (fieldMatcher.find()) {
-            newDocumentType.append(documentType.substring(end, fieldMatcher.start()));
-            String fieldValue = (String) event.get(documentType.substring(fieldMatcher.start() + 2, fieldMatcher.end() - 1));
-            newDocumentType.append(fieldValue);
-            end = fieldMatcher.end();
-        }
-        newDocumentType.append(documentType.substring(end));
-
-        String iat = String.format("%s/%s", nnewIndex, newDocumentType);
-        if (eventsMap.containsKey(iat)) {
-            eventsMap.get(iat).add(event);
+        index = nnewIndex.toString();
+        if (eventsMap.containsKey(index)) {
+            eventsMap.get(index).add(event);
         } else {
             List<Event> events = Collections.synchronizedList(new ArrayList<>());
             events.add(event);
-            eventsMap.put(iat, events);
+            eventsMap.put(index, events);
         }
         sendEventToES();
     }
@@ -147,6 +139,7 @@ public class ElasticSearch extends Output {
             if (shutdown || events.size() >= ((ElasticSearchConfig) config).getBulkSize()) {
                 CloseableHttpResponse response = null;
                 try {
+                    String host = hosts.get(random.nextInt(hosts.size()));
                     StringBuilder builder = new StringBuilder();
                     events.forEach(event -> {
                         try {
@@ -156,8 +149,16 @@ public class ElasticSearch extends Output {
                             logger.warn("Encounter an event that cannot be resolved. {}", event);
                         }
                     });
-                    HttpPost httpPost = new HttpPost(String.format("http://%s/%s/_bulk", hosts.get(random.nextInt(hosts.size())), k));
-                    httpPost.setEntity(new ByteArrayEntity(builder.toString().getBytes(), ContentType.create("application/x-ndjson")));
+                    if (!checkIndexExist(k) && ((ElasticSearchConfig) config).getMapping() != null) {//索引还不存在，创建
+                        HttpPut httpPut = new HttpPut(String.format("http://%s/%s", host, k));
+                        httpPut.setEntity(new ByteArrayEntity(((ElasticSearchConfig) config).getMapping().getBytes(StandardCharsets.UTF_8), ContentType.create("application/x-ndjson")));
+                        response = httpclient.execute(httpPut);
+                        if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+                            throw new RuntimeException("Failed to create index mapping");
+                        }
+                    }
+                    HttpPost httpPost = new HttpPost(String.format("http://%s/%s/_bulk", host, k));
+                    httpPost.setEntity(new ByteArrayEntity(builder.toString().getBytes(StandardCharsets.UTF_8), ContentType.create("application/x-ndjson")));
                     response = httpclient.execute(httpPost);
                     logger.info(response.getStatusLine().toString());
                     HttpEntity entity = response.getEntity();
@@ -176,5 +177,13 @@ public class ElasticSearch extends Output {
                 }
             }
         });
+    }
+
+    private boolean checkIndexExist(String index) throws IOException {
+        List<String> hosts = ((ElasticSearchConfig) config).getHosts();
+        String host = hosts.get(random.nextInt(hosts.size()));
+        HttpHead httpHead = new HttpHead(String.format("http://%s/%s", host, index));
+        CloseableHttpResponse response = httpclient.execute(httpHead);
+        return response.getStatusLine().getStatusCode() == HttpStatus.SC_OK;
     }
 }
