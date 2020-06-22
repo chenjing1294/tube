@@ -71,7 +71,7 @@ public class Geoip2 extends Filter {
                 geoip2.put("location", loc);
                 event.put("geoip2", geoip2);
             } catch (GeoIp2Exception e) {
-                logger.debug("An exception occurred while parsing the IP address({})", ip);
+                logger.trace("An exception occurred while parsing the IP address({})", ip);
             } catch (IOException e) {
                 logger.error(e.getMessage(), e);
             }

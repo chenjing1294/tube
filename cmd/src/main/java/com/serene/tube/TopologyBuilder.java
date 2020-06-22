@@ -158,6 +158,9 @@ public class TopologyBuilder {
         for (Filter filter : filters) {
             filter.shutdown();
         }
+        for (Output output : outputs) {
+            output.hurryOver();
+        }
         outputDispatcher.shutdown();
         for (Output output : outputs) {
             output.shutdown();

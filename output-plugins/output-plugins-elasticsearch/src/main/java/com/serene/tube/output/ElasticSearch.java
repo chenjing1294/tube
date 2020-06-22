@@ -150,12 +150,14 @@ public class ElasticSearch extends Output {
                         }
                     });
                     if (!checkIndexExist(k) && ((ElasticSearchConfig) config).getMapping() != null) {//索引还不存在，创建
+                        logger.debug("Index [{}] does not exist, creating...", k);
                         HttpPut httpPut = new HttpPut(String.format("http://%s/%s", host, k));
                         httpPut.setEntity(new ByteArrayEntity(((ElasticSearchConfig) config).getMapping().getBytes(StandardCharsets.UTF_8), ContentType.create("application/x-ndjson")));
                         response = httpclient.execute(httpPut);
                         if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
                             throw new RuntimeException("Failed to create index mapping");
                         }
+                        logger.debug("Index [{}] created successfully", k);
                     }
                     HttpPost httpPost = new HttpPost(String.format("http://%s/%s/_bulk", host, k));
                     httpPost.setEntity(new ByteArrayEntity(builder.toString().getBytes(StandardCharsets.UTF_8), ContentType.create("application/x-ndjson")));
@@ -185,5 +187,10 @@ public class ElasticSearch extends Output {
         HttpHead httpHead = new HttpHead(String.format("http://%s/%s", host, index));
         CloseableHttpResponse response = httpclient.execute(httpHead);
         return response.getStatusLine().getStatusCode() == HttpStatus.SC_OK;
+    }
+
+    @Override
+    public void hurryOver() {
+        this.shutdown = true;
     }
 }

@@ -3,7 +3,7 @@
     {
       "Stdin": {
         "hostname": true,
-        "type": "Stdin",
+        "type": "stdin",
         "enableMeter": true,
         "codec": "plain"
       }
@@ -17,7 +17,7 @@
           "hangout",
           "tube"
         ],
-        "type": "Microservices",
+        "type": "microservices",
         "enableMeter": true,
         "codec": "json"
       }
@@ -29,7 +29,7 @@
           "D:\\temp\\log\\access_20200610.log.gz",
           "D:\\temp\\log\\access.log"
         ],
-        "type": "Nginx",
+        "type": "nginx",
         "encoding": "UTF8",
         "startPosition": "beginning",
         "readPeriod": 3000,
