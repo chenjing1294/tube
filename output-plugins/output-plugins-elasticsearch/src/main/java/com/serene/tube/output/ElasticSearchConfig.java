@@ -9,6 +9,15 @@ public class ElasticSearchConfig extends OutputConfig {
     private String index;
     private Integer bulkSize;
     private String mapping;
+    private Integer period;
+
+    public Integer getPeriod() {
+        return period;
+    }
+
+    public void setPeriod(Integer period) {
+        this.period = period;
+    }
 
     public String getMapping() {
         return mapping;

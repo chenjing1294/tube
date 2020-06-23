@@ -16,7 +16,6 @@
             <!-- keep 30 days' worth of history capped at 3GB total size -->
             <maxHistory>30</maxHistory>
             <totalSizeCap>3GB</totalSizeCap>
-
         </rollingPolicy>
 
         <encoder>
@@ -28,7 +27,7 @@
         <appender-ref ref="FILE"/>
     </logger>
 
-    <root level="DEBUG">
+    <root level="${tube.log.level:-DEBUG}">
         <appender-ref ref="STDOUT"/>
     </root>
 </configuration>

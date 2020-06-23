@@ -151,7 +151,7 @@ public class TopologyBuilder {
     }
 
     private void _shutdown() {
-        logger.info("Ending threads, please do not forcefully close the program!!");
+        logger.info("Ending threads, please do not forcefully close the program!!!");
         for (Input input : inputs) {
             input.shutdown();
         }

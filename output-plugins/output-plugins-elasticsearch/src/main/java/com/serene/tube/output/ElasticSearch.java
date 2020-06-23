@@ -31,15 +31,20 @@ public class ElasticSearch extends Output {
     private Map<String, List<Event>> eventsMap;
     private boolean shutdown = false;
     private CloseableHttpClient httpclient;
+    private long startTime;
 
     public ElasticSearch(ElasticSearchConfig config) {
         super(config);
+        startTime = System.currentTimeMillis() / 1000;
         objectMapper = new ObjectMapper();
         eventsMap = new ConcurrentHashMap<>();
         random = new Random();
         httpclient = HttpClients.createDefault();
         if (config.getBulkSize() == null) {
             config.setBulkSize(100);
+        }
+        if (config.getPeriod() == null || config.getPeriod() <= 0) {
+            config.setPeriod(30);
         }
         if (config.getMapping() == null || config.getMapping().length() == 0) {
             logger.warn("No mapping specified for index");
@@ -136,7 +141,7 @@ public class ElasticSearch extends Output {
     private void sendEventToES() {
         List<String> hosts = ((ElasticSearchConfig) this.config).getHosts();
         eventsMap.forEach((k, events) -> {
-            if (shutdown || events.size() >= ((ElasticSearchConfig) config).getBulkSize()) {
+            if (shutdown || events.size() >= ((ElasticSearchConfig) config).getBulkSize() || timeout()) {
                 CloseableHttpResponse response = null;
                 try {
                     String host = hosts.get(random.nextInt(hosts.size()));
@@ -162,7 +167,7 @@ public class ElasticSearch extends Output {
                     HttpPost httpPost = new HttpPost(String.format("http://%s/%s/_bulk", host, k));
                     httpPost.setEntity(new ByteArrayEntity(builder.toString().getBytes(StandardCharsets.UTF_8), ContentType.create("application/x-ndjson")));
                     response = httpclient.execute(httpPost);
-                    logger.info(response.getStatusLine().toString());
+                    logger.debug(response.getStatusLine().toString());
                     HttpEntity entity = response.getEntity();
                     EntityUtils.consume(entity);
                 } catch (Exception e) {
@@ -192,5 +197,15 @@ public class ElasticSearch extends Output {
     @Override
     public void hurryOver() {
         this.shutdown = true;
+    }
+
+    /**
+     * 定期发送数据到ES
+     */
+    private boolean timeout() {
+        long curr = System.currentTimeMillis() / 1000;
+        long diff = curr - startTime;
+        startTime = curr;
+        return diff >= ((ElasticSearchConfig) config).getPeriod();
     }
 }
