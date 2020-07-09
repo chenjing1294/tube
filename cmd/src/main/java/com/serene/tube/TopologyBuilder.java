@@ -124,9 +124,16 @@ public class TopologyBuilder {
         inputs = this.buildInputs();
         filters = this.buildFilters();
         outputs = this.buildOutputs();
-        for (Input input : inputs) {
-            input.setInputQueue(inputQueue);
-            input.start();
+        if (filters.size() > 0) {
+            for (Input input : inputs) {
+                input.setInputQueue(inputQueue);
+                input.start();
+            }
+        } else { //如果没有过滤器，直接把事件输入到输出队列
+            for (Input input : inputs) {
+                input.setInputQueue(outputQueue);
+                input.start();
+            }
         }
         if (filters.size() > 0) {
             filters.get(0).setPreQueue(inputQueue);

@@ -2,6 +2,7 @@ package com.serene.tube;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +15,7 @@ public abstract class Filter extends Thread implements Plugin {
     private BlockingQueue<Event> preQueue;
     private BlockingQueue<Event> postQueue;
     private Meter meter;
+    private Timer timer;
     private boolean processing;
 
     private ScriptEngineManager engineManager;
@@ -25,7 +27,8 @@ public abstract class Filter extends Thread implements Plugin {
         processing = false;
         this.config = config;
         if (config.getEnableMeter() != null && config.getEnableMeter()) {
-            this.meter = metricRegistry.meter(MetricRegistry.name(this.getClass()));
+            this.meter = metricRegistry.meter(MetricRegistry.name(this.getClass(), "meter"));
+            this.timer = metricRegistry.timer(MetricRegistry.name(this.getClass(), "timer"));
         }
 
         engineManager = new ScriptEngineManager();
@@ -68,22 +71,31 @@ public abstract class Filter extends Thread implements Plugin {
 
     public abstract Event filter(Event event);
 
-    private Event process(Event event) throws Exception {
-        Bindings bindings = engine.createBindings();
-        bindings.put("event", event);
-        boolean result = true;
-        if (script != null) {
-            result = (boolean) script.eval(bindings);
-        } else if (config.getCondition() != null) {
-            result = (boolean) engine.eval(config.getCondition(), bindings);
-        }
-        if (result) {
-            event = preProcess(event);
-            event = filter(event);
-            event = postProcess(event);
-        }
-        if (config.getEnableMeter() != null && config.getEnableMeter()) {
-            meter.mark();
+    private Event process(Event event) {
+        Timer.Context context = null;
+        try {
+            if (config.getEnableMeter() != null && config.getEnableMeter()) {
+                meter.mark();
+                context = timer.time();
+            }
+            Bindings bindings = engine.createBindings();
+            bindings.put("event", event);
+            boolean result = true;
+            if (script != null) {
+                result = (boolean) script.eval(bindings);
+            } else if (config.getCondition() != null) {
+                result = (boolean) engine.eval(config.getCondition(), bindings);
+            }
+            if (result) {
+                event = preProcess(event);
+                event = filter(event);
+                event = postProcess(event);
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        } finally {
+            if (context != null)
+                context.stop();
         }
         return event;
     }

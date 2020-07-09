@@ -4,33 +4,18 @@
       "File": {
         "codec": "json",
         "paths": [
-          "D:\\temp\\log2"
+          "D:\\temp\\log\\access_6.log"
         ],
         "type": "nginx",
-        "encoding": "UTF8",
+        "encoding": "UTF-8",
         "startPosition": "beginning",
-        "readPeriod": 3000,
+        "threadNum": 1,
         "enableMeter": true
       }
     }
   ],
   "filters": [
-    {
-      "JavaScript": {
-        "condition": "event['@fields'] ? true : false",
-        "customFunctionPath": "D:\\tube\\config\\filter.js"
-      },
-      "Geoip2": {
-        "condition": "event['remote_addr'] ? true : false",
-        "ip": "remote_addr"
-      },
-      "Remove": {
-        "fields": [
-          "@fields",
-          "@message"
-        ]
-      }
-    }
+
   ],
   "outputs": [
     {

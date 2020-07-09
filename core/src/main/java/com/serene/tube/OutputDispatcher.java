@@ -4,11 +4,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
 
 public class OutputDispatcher extends Thread implements Plugin {
     private static final Logger logger = LoggerFactory.getLogger(OutputDispatcher.class);
     private List<Output> outputs;
-    private OutputQueue outputQueue;
+    private BlockingQueue<Event> outputQueue;
 
 
     public OutputDispatcher(List<Output> outputs) {
@@ -16,7 +17,7 @@ public class OutputDispatcher extends Thread implements Plugin {
         this.outputs = outputs;
     }
 
-    public void setOutputQueue(OutputQueue outputQueue) {
+    public void setOutputQueue(BlockingQueue<Event> outputQueue) {
         this.outputQueue = outputQueue;
     }
 

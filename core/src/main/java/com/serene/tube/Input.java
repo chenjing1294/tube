@@ -2,6 +2,7 @@ package com.serene.tube;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -11,6 +12,7 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.concurrent.BlockingQueue;
 
 /**
  * Input的子类负责覆盖{@link #run()}方法，在该方法内部从某个源获取原始字符串数据
@@ -24,14 +26,16 @@ public abstract class Input extends Thread implements Plugin {
     protected final InputConfig config;
     private final DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
     private Meter meter;
-    private InputQueue inputQueue;
+    private Timer timer;
+    private BlockingQueue<Event> inputQueue;
     private ObjectMapper objectMapper = new ObjectMapper();
 
     public Input(InputConfig config, String threadName) {
         super(threadName);
         this.config = config;
         if (config.getEnableMeter() != null && config.getEnableMeter()) {
-            this.meter = metricRegistry.meter(MetricRegistry.name(this.getClass()));
+            this.meter = metricRegistry.meter(MetricRegistry.name(this.getClass(), "meter"));
+            this.timer = metricRegistry.timer(MetricRegistry.name(this.getClass(), "timer"));
         }
         if (config.getCodec() == null) {
             logger.error("[codec] properties must be configured");
@@ -39,7 +43,7 @@ public abstract class Input extends Thread implements Plugin {
         }
     }
 
-    void setInputQueue(InputQueue inputQueue) {
+    void setInputQueue(BlockingQueue<Event> inputQueue) {
         this.inputQueue = inputQueue;
     }
 
@@ -59,6 +63,11 @@ public abstract class Input extends Thread implements Plugin {
      * @param message 原始字符串
      */
     protected void process(String message) {
+        Timer.Context context = null;
+        if (config.getEnableMeter() != null && config.getEnableMeter()) {
+            meter.mark();
+            context = timer.time();
+        }
         Event event = new Event();
         switch (config.getCodec()) {
             case "json":
@@ -71,12 +80,17 @@ public abstract class Input extends Thread implements Plugin {
                 } catch (IOException e) {
                     logger.error(e.getMessage(), e);
                     return;
+                } finally {
+                    if (context != null)
+                        context.stop();
                 }
                 break;
             case "plain":
                 break;
             default:
                 logger.error("unsupported codec [{}]", config.getCodec());
+                if (context != null)
+                    context.stop();
                 return;
         }
         event.put("@message", message);
@@ -84,11 +98,11 @@ public abstract class Input extends Thread implements Plugin {
         beforeEnterInputQueue(event);
         try {
             inputQueue.put(event);
-            if (config.getEnableMeter() != null && config.getEnableMeter()) {
-                meter.mark();
-            }
         } catch (InterruptedException e) {
             logger.error(e.getMessage(), e);
+        } finally {
+            if (context != null)
+                context.stop();
         }
     }
 }
