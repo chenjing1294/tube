@@ -144,6 +144,8 @@ public class ElasticSearch extends Output {
             if (shutdown || events.size() >= ((ElasticSearchConfig) config).getBulkSize() || timeout()) {
                 CloseableHttpResponse response = null;
                 try {
+                    if(events.size() == 0)
+                        return;
                     String host = hosts.get(random.nextInt(hosts.size()));
                     StringBuilder builder = new StringBuilder();
                     events.forEach(event -> {
@@ -168,6 +170,7 @@ public class ElasticSearch extends Output {
                     httpPost.setEntity(new ByteArrayEntity(builder.toString().getBytes(StandardCharsets.UTF_8), ContentType.create("application/x-ndjson")));
                     response = httpclient.execute(httpPost);
                     logger.debug(response.getStatusLine().toString());
+                    logger.debug(builder.toString());
                     HttpEntity entity = response.getEntity();
                     EntityUtils.consume(entity);
                 } catch (Exception e) {

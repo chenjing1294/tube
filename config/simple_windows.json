@@ -1,26 +1,46 @@
 {
   "inputs": [
     {
-      "File": {
-        "codec": "json",
-        "paths": [
-          "D:\\temp\\log\\access_6.log"
+      "Redis": {
+        "host": "192.168.1.157",
+        "port": 30464,
+        "password": "PrW=plrmBA$XGzJ)",
+        "channels": [
+          "microservices"
         ],
-        "type": "nginx",
-        "encoding": "UTF-8",
-        "startPosition": "beginning",
-        "threadNum": 1,
-        "enableMeter": true
+        "type": "microservices",
+        "enableMeter": true,
+        "codec": "json"
       }
     }
   ],
   "filters": [
-
+    {
+      "JavaScript": {
+        "condition": "event['@fields'] ? true : false",
+        "customFunctionPath": "D:\\tube\\config\\filter.js"
+      },
+      "Geoip2": {
+        "condition": "event['remote_addr'] ? true : false",
+        "ip": "remote_addr"
+      },
+      "Remove": {
+        "fields": [
+          "@fields",
+          "@message"
+        ]
+      }
+    }
   ],
   "outputs": [
     {
-      "Stdout": {
-        "enableMeter": true
+      "ElasticSearch": {
+        "hosts": [
+          "192.168.1.187:9200"
+        ],
+        "index": "tube-${source}-%{YYYY.MM.dd}",
+        "enableMeter": true,
+        "bulkSize": 100
       }
     }
   ]

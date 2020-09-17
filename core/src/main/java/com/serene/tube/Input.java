@@ -72,7 +72,7 @@ public abstract class Input extends Thread implements Plugin {
         switch (config.getCodec()) {
             case "json":
                 try {
-                    message = message.replaceAll("\\\\(?!\")", "\\\\\\\\");
+                    message = message.replaceAll("(?<!\\\\)\\\\(?=[xX])", "\\\\\\\\");
                     event = objectMapper.readValue(message, Event.class);
                 } catch (JsonParseException e) {
                     logger.error("it seems that underlying input contains invalid content.", e);

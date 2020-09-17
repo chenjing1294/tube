@@ -31,7 +31,7 @@ public class Redis extends Input {
             logger.error("please config [channels] for Redis input plugin!");
             System.exit(1);
         }
-        this.jedisPool = new JedisPool(new GenericObjectPoolConfig(), config.getHost(), config.getPort(), Protocol.DEFAULT_TIMEOUT, config.getPassword());
+        this.jedisPool = new JedisPool(new GenericObjectPoolConfig(), config.getHost(), config.getPort(), 0, config.getPassword());
         try {
             logger.info("Start to detect whether the Redis connection...");
             Jedis resource = jedisPool.getResource();
@@ -49,6 +49,7 @@ public class Redis extends Input {
                 @Override
                 public void onMessage(String channel, String message) {
                     super.onMessage(channel, message);
+                    logger.debug(message);
                     process(message);
                 }
             };
