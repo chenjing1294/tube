@@ -17,7 +17,7 @@ public class Main {
     public static void main(String[] args) {
         //Parse CommandLine arguments
         CommandLineValues cm = new CommandLineValues(args);
-        // parse configure file
+        //parse configure file
         Map configs = cm.getConfigFile();
 
         final List<HashMap<String, Map>> inputConfigs = (ArrayList<HashMap<String, Map>>) configs.get("inputs");

@@ -17,10 +17,13 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Geoip2 extends Filter {
     private final static Logger logger = LoggerFactory.getLogger(Geoip2.class);
     private DatabaseReader reader;
+    private final Pattern ipPattern = Pattern.compile("\\d{3}\\.\\d{3}\\.\\d{3}\\.\\d{3}");
 
     public Geoip2(Geoip2Config config, String threadName) {
         super(config, threadName);
@@ -48,7 +51,9 @@ public class Geoip2 extends Filter {
     public Event filter(Event event) {
         String ipField = ((Geoip2Config) config).getIp();
         String ip = (String) event.get(ipField);
-        if (ip != null && ip.length() > 0) {
+        Pattern compile = Pattern.compile("\\d{3}\\.\\d{3}\\.\\d{3}\\.\\d{3}");
+
+        if (ip != null && ip.length() > 0 && ipPattern.matcher(ip).matches()) {
             try {
                 InetAddress ipAddress = InetAddress.getByName(ip);
                 CityResponse response = reader.city(ipAddress);

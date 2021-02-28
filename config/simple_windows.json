@@ -1,16 +1,17 @@
 {
   "inputs": [
     {
-      "Redis": {
-        "host": "192.168.1.157",
-        "port": 30464,
-        "password": "PrW=plrmBA$XGzJ)",
-        "channels": [
-          "microservices"
+      "File": {
+        "codec": "json",
+        "paths": [
+          "D:\\temp\\lbl.access.log002"
         ],
-        "type": "microservices",
-        "enableMeter": true,
-        "codec": "json"
+        "type": "nginx",
+        "encoding": "UTF8",
+        "startPosition": "beginning",
+        "readPeriod": 3000,
+        "threadNum": 3,
+        "enableMeter": true
       }
     }
   ],
@@ -36,9 +37,9 @@
     {
       "ElasticSearch": {
         "hosts": [
-          "192.168.1.187:9200"
+          "localhost:9200"
         ],
-        "index": "tube-${source}-%{YYYY.MM.dd}",
+        "index": "tube-nginx-%{YYYY.MM.dd}",
         "enableMeter": true,
         "bulkSize": 100
       }
